@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the AI Learns</title>
+<meta name="description" content="A step-by-step, hands-on technical guide to how machine learning is actually carried out — with live demos, videos and references.">
+<meta property="og:title" content="How the AI Learns — the technical version">
+<meta property="og:description" content="Data, models, loss, gradient descent, backpropagation, evaluation and deployment — explained step by step with live demos.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2316161a'/%3E%3Cpath d='M6 22 C 11 22, 13 9, 16 9 S 21 22, 26 22' stroke='%23f6f4ee' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='9' r='3' fill='%23ff6a3d'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+<header class="topbar">
+  <a class="brand" href="#top"><span class="brand-mark"></span>How the AI Learns</a>
+  <nav class="topnav" aria-label="Sections">
+    <a href="#analogy">Analogy</a>
+    <a href="#idea">Big idea</a>
+    <a href="#steps">7 steps</a>
+    <a href="#llm">LLMs</a>
+    <a href="#diy">Do it</a>
+    <a href="#videos">Videos</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#refs">References</a>
+  </nav>
+  <button class="navtoggle" aria-label="Open menu" aria-expanded="false" id="navToggle"><span></span><span></span></button>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-text">
+    <p class="kicker">Week 1 · Extra report · “How the AI learns”</p>
+    <h1>How the AI learns<br><em>— the technical version.</em></h1>
+    <p class="lede">A website is built with HTML for the skeleton, CSS for the look, and GitHub to put it online. Machine learning has a recipe too. This guide walks through it step by step: what people actually <em>do</em>, which tools they use, and what is happening inside the computer. Every demo on this page really trains, live in your browser.</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="#analogy">Start the guide</a>
+      <a class="btn ghost" href="#nn-lab">Jump to the neural-net lab</a>
+    </div>
+    <ul class="hero-meta">
+      <li><b>11</b> live demos</li>
+      <li><b>9</b> curated videos</li>
+      <li><b>~25 min</b> read</li>
+    </ul>
+  </div>
+  <figure class="hero-fig">
+    <canvas id="heroCanvas" aria-label="Animation: a straight line repeatedly learning to fit a cloud of points"></canvas>
+    <figcaption>
+      <span>step <b id="heroStep">0</b></span>
+      <span>loss <b id="heroLoss">—</b></span>
+      <span class="muted">This line starts as a random guess and learns from the data. That is the whole idea.</span>
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ============ ANALOGY ============ -->
+<section class="section" id="analogy">
+  <div class="sec-head">
+    <p class="eyebrow">00 — The analogy</p>
+    <h2>Building a website vs. training a model</h2>
+    <p class="sec-lede">The two jobs have the same overall shape. They differ in one important place. Click any row to compare.</p>
+  </div>
+
+  <div class="analogy" id="analogy-table">
+    <div class="analogy-head">
+      <span></span>
+      <span>🌐 Building a website</span>
+      <span>🧠 Training an ML model</span>
+    </div>
+    <!-- rows filled by JS -->
+  </div>
+
+  <div class="callout key">
+    <p class="callout-label">The one real difference</p>
+    <p>When you build a website, <b>you write every rule yourself</b>: “this button is blue, 16px, centred”. In machine learning, you <b>don’t write the rules</b>. You write a <em>learning procedure</em> and give it examples, and the computer works out the rules on its own. Those rules are stored as millions (or billions) of numbers called <b>parameters</b> or <b>weights</b>.</p>
+  </div>
+</section>
+
+<!-- ============ BIG IDEA ============ -->
+<section class="section" id="idea">
+  <div class="sec-head">
+    <p class="eyebrow">01 — The big idea, in one loop</p>
+    <h2>Learning = guess, measure the error, nudge, repeat</h2>
+    <p class="sec-lede">Every modern AI system learns with the same four-beat loop, from a spam filter to ChatGPT or Claude. Hover over each beat.</p>
+  </div>
+
+  <div class="loop" id="loopDiagram">
+    <div class="loop-ring">
+      <svg viewBox="0 0 400 400" aria-hidden="true">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        </defs>
+        <circle cx="200" cy="200" r="150" class="ring-track"/>
+        <circle cx="200" cy="200" r="150" class="ring-run" id="ringRun"/>
+      </svg>
+      <div class="loop-center">
+        <span class="loop-eq">θ ← θ − η · ∇L</span>
+        <span class="loop-cap">“move the numbers a little bit<br>in the direction that reduces the error”</span>
+      </div>
+      <button class="beat b1" data-beat="0"><i>1</i>Predict</button>
+      <button class="beat b2" data-beat="1"><i>2</i>Measure loss</button>
+      <button class="beat b3" data-beat="2"><i>3</i>Find gradient</button>
+      <button class="beat b4" data-beat="3"><i>4</i>Update weights</button>
+    </div>
+    <div class="loop-detail" id="loopDetail" aria-live="polite"></div>
+  </div>
+
+  <div class="symbols">
+    <div><code>θ</code><span><b>theta</b>: all the model’s adjustable numbers (weights and biases).</span></div>
+    <div><code>L</code><span><b>loss</b>: a single number saying how wrong the model is right now.</span></div>
+    <div><code>∇L</code><span><b>gradient</b>: for every weight, which direction makes the loss go up, and how steeply.</span></div>
+    <div><code>η</code><span><b>eta, the learning rate</b>: how big a step to take each time.</span></div>
+  </div>
+</section>
+
+<!-- ============ 7 STEPS ============ -->
+<section class="section" id="steps">
+  <div class="sec-head">
+    <p class="eyebrow">02 — The process, step by step</p>
+    <h2>The 7 steps of a real ML project</h2>
+    <p class="sec-lede">This is the workflow a data scientist or ML engineer follows. Training (step 5) gets all the attention, but in real projects most of the time goes into steps 1, 2 and 6.</p>
+  </div>
+
+  <ol class="stepper" id="stepper">
+    <li><a href="#s1"><i>1</i><span>Frame the problem</span></a></li>
+    <li><a href="#s2"><i>2</i><span>Collect &amp; prepare data</span></a></li>
+    <li><a href="#s3"><i>3</i><span>Choose a model</span></a></li>
+    <li><a href="#s4"><i>4</i><span>Define the loss</span></a></li>
+    <li><a href="#s5"><i>5</i><span>Train</span></a></li>
+    <li><a href="#s6"><i>6</i><span>Evaluate</span></a></li>
+    <li><a href="#s7"><i>7</i><span>Deploy &amp; monitor</span></a></li>
+  </ol>
+
+  <!-- STEP 1 -->
+  <article class="step" id="s1">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Frame the problem</h3>
+      <p>Before any code, decide <b>what goes in</b>, <b>what should come out</b>, and <b>how you will know it worked</b>. The kind of output decides the kind of ML you need:</p>
+      <ul class="types">
+        <li><b>Classification</b>: pick a category (spam / not spam, cat / dog).</li>
+        <li><b>Regression</b>: predict a number (house price, tomorrow’s temperature).</li>
+        <li><b>Clustering</b>: find groups with no labels given (customer segments).</li>
+        <li><b>Generation</b>: produce new text, images or audio (ChatGPT, Claude, Midjourney).</li>
+      </ul>
+      <div class="demo">
+        <div class="demo-head"><span class="demo-tag">Demo 1</span><h4>What type of problem is it?</h4><span class="demo-hint">Click a card to reveal</span></div>
+        <div class="cards" id="typeCards"></div>
+      </div>
+      <p class="tip"><b>Pro habit:</b> write down a simple <em>baseline</em> first, for example “always predict the average price”. If your fancy model can’t beat that, something is wrong.</p>
+    </div>
+  </article>
+
+  <!-- STEP 2 -->
+  <article class="step" id="s2">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Collect &amp; prepare the data</h3>
+      <p>Data is the raw material. Each row is one <b>example</b>. The input columns are called <b>features</b>, and the answer you want to predict is the <b>label</b> (or target). Preparing data means removing errors and duplicates, filling in missing values, turning text and categories into numbers, and <b>scaling</b> features so they sit in similar ranges.</p>
+
+      <div class="demo">
+        <div class="demo-head"><span class="demo-tag">Demo 2</span><h4>Features vs. label</h4><span class="demo-hint">Toggle to see what the model sees</span></div>
+        <div class="seg" role="tablist" id="dataView">
+          <button class="on" data-v="raw">Raw table</button>
+          <button data-v="roles">Features &amp; label</button>
+          <button data-v="scaled">Scaled for the model</button>
+        </div>
+        <div class="tablewrap"><table class="datatable" id="houseTable"></table></div>
+        <p class="demo-note" id="dataNote"></p>
+      </div>
+
+      <h4 class="sub">Split the data, and lock away the test set</h4>
+      <p>You never grade a student with the exact questions they practised on. In the same way, the data is split into three parts:</p>
+      <div class="demo">
+        <div class="demo-head"><span class="demo-tag">Demo 3</span><h4>Train / validation / test split</h4><span class="demo-hint">Drag the sliders</span></div>
+        <div class="split">
+          <div class="split-grid" id="splitGrid"></div>
+          <div class="split-ctl">
+            <label>Training <output id="trOut">70%</output><input type="range" id="trRange" min="40" max="90" value="70"></label>
+            <label>Validation <output id="vaOut">15%</output><input type="range" id="vaRange" min="5" max="30" value="15"></label>
+            <p class="legend"><i class="sw tr"></i><b>Training</b>: the model learns from these.</p>
+            <p class="legend"><i class="sw va"></i><b>Validation</b>: used while building, to choose settings and catch overfitting.</p>
+            <p class="legend"><i class="sw te"></i><b>Test</b> <output id="teOut">15%</output>: touched <em>once</em>, at the very end, for an honest score.</p>
+          </div>
+        </div>
+      </div>
+      <p class="warn"><b>Data leakage</b> is the classic beginner mistake: information from the test set sneaks into training (for example, you scale using the average of <em>all</em> the data). The model then looks brilliant in testing and fails in real life.</p>
+    </div>
+  </article>
+
+  <!-- STEP 3 -->
+  <article class="step" id="s3">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Choose a model (the “skeleton”)</h3>
+      <p>The model is a mathematical function with adjustable knobs, its <b>parameters</b>. Choosing a model is like writing the HTML skeleton: it fixes the <em>shape</em> of what can be learned, while training later fills in the details. The simplest building block of a neural network is a single <b>neuron</b>: multiply each input by a weight, add them up with a bias, then pass the total through a “squash” function.</p>
+
+      <div class="demo">
+        <div class="demo-head"><span class="demo-tag">Demo 4</span><h4>Be a neuron: tune the weights by hand</h4><span class="demo-hint">Try to colour every dot correctly</span></div>
+        <div class="neuron">
+          <canvas id="neuronCanvas" class="sq"></canvas>
+          <div class="neuron-ctl">
+            <div class="formula" id="neuronFormula"></div>
+            <label>weight w₁ <output id="w1o"></output><input type="range" id="w1" min="-5" max="5" step="0.1" value="1"></label>
+            <label>weight w₂ <output id="w2o"></output><input type="range" id="w2" min="-5" max="5" step="0.1" value="-0.5"></label>
+            <label>bias b <output id="bo"></output><input type="range" id="bb" min="-4" max="4" step="0.1" value="0.4"></label>
+            <div class="scoreline"><span>Accuracy</span><b id="neuronAcc">—</b></div>
+            <p class="demo-note">A neuron can only draw <b>one straight boundary</b>. To learn curvy boundaries, we stack many neurons in <b>layers</b>. That stack is a <em>neural network</em>, and you will train one in Step 5.</p>
+          </div>
+        </div>
+      </div>
+
+      <h4 class="sub">Models range from tiny to enormous</h4>
+      <p>The same idea scales from 2 parameters to hundreds of billions. Bars use a <b>log scale</b>: each grid line is 1,000× more.</p>
+      <div class="ladder" id="ladder"></div>
+    </div>
+  </article>
+
+  <!-- STEP 4 -->
+  <article class="step" id="s4">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3>Define the loss (the scorecard)</h3>
+      <p>To improve, the model needs <b>one number that says how wrong it is</b>. That number is the <b>loss</b>. For predicting numbers, the standard choice is <b>Mean Squared Error</b>: take each prediction’s error, square it, and average. Squaring makes big mistakes count a lot more than small ones. You can literally see it as squares.</p>
+      <div class="demo">
+        <div class="demo-head"><span class="demo-tag">Demo 5</span><h4>You are the optimiser</h4><span class="demo-hint">Move the line and make the squares as small as possible</span></div>
+        <div class="fit">
+          <canvas id="manualCanvas"></canvas>
+          <div class="fit-ctl">
+            <label>slope w <output id="mwo"></output><input type="range" id="mw" min="-1" max="3" step="0.01" value="0.2"></label>
+            <label>intercept b <output id="mbo"></output><input type="range" id="mb" min="-0.5" max="1.2" step="0.01" value="0.9"></label>
+            <label class="check"><input type="checkbox" id="mSquares" checked> show squared errors</label>
+            <div class="bigstat"><span>MSE loss</span><b id="mLoss">—</b><em id="mBest"></em></div>
+            <p class="demo-note">With 2 knobs you can do this by hand. GPT-3 has <b>175 billion</b> knobs <a class="cite" href="#ref-9">[9]</a>. That is why we need an automatic method: <b>gradient descent</b>.</p>
+          </div>
+        </div>
+      </div>
+      <p>For choosing between categories, models use <b>cross-entropy</b> loss instead: if the model gave the correct answer probability <i>p</i>, the loss is <code>−log(p)</code>. Being confident and right costs almost nothing, and being confident and wrong costs a lot. Language models use exactly this loss, one word at a time (see the <a href="#llm">LLM section</a>).</p>
+    </div>
+  </article>
+
+  <!-- STEP 5 -->
+  <article class="step" id="s5">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h3>Train: gradient descent + backpropagation</h3>
+      <p>Picture the loss as a landscape. Every possible setting of the weights is a location, and the height is the loss. Training means <b>walking downhill</b>. At each step the <b>gradient</b> tells us which way is uphill, so we step the opposite way. The size of the step is the <b>learning rate</b>, and it is the most important setting in all of deep learning.</p>
+
+      <div class="demo wide">
+        <div class="demo-head"><span class="demo-tag">Demo 6</span><h4>Gradient descent, live</h4><span class="demo-hint">Press play · change the learning rate · click the map to restart from a new spot</span></div>
+        <div class="gd">
+          <div class="gd-pane"><p class="pane-cap">The data &amp; current line</p><canvas id="gdData"></canvas></div>
+          <div class="gd-pane"><p class="pane-cap">The loss landscape (w, b) · darker = lower loss</p><canvas id="gdLand" class="clickable"></canvas></div>
+          <div class="gd-pane span2"><p class="pane-cap">Loss over training steps</p><canvas id="gdCurve" class="short"></canvas></div>
+        </div>
+        <div class="controls">
+          <button class="btn sm primary" id="gdPlay">▶ Play</button>
+          <button class="btn sm" id="gdStep">Step</button>
+          <button class="btn sm" id="gdReset">Reset</button>
+          <label class="inline">learning rate η <output id="gdLrOut"></output><input type="range" id="gdLr" min="0" max="100" value="62"></label>
+          <div class="presets"><button data-lr="0.02">too small</button><button data-lr="0.5">just right</button><button data-lr="0.86">too big</button></div>
+        </div>
+        <div class="readout"><span>step <b id="gdIt">0</b></span><span>w <b id="gdW"></b></span><span>b <b id="gdB"></b></span><span>loss <b id="gdL"></b></span><span id="gdMsg" class="msg"></span></div>
+      </div>
+
+      <h4 class="sub">Backpropagation: how the gradient is calculated</h4>
+      <p>For a network with millions of weights, how do we know which way to nudge each one? <b>Backpropagation</b> <a class="cite" href="#ref-6">[6]</a> applies the chain rule from calculus <em>backwards</em> through the computation. The forward pass computes the prediction. The backward pass passes “blame” from the loss back to every weight. Try it on the smallest possible network: one input, one weight, one bias.</p>
+
+      <div class="demo">
+        <div class="demo-head"><span class="demo-tag">Demo 7</span><h4>Forward pass → backward pass → update</h4><span class="demo-hint">Press the buttons in order, then repeat</span></div>
+        <div class="bp">
+          <svg id="bpGraph" viewBox="0 0 760 275" role="img" aria-label="Computation graph for L = (w·x + b − y)²"></svg>
+          <div class="controls">
+            <button class="btn sm primary" id="bpFwd">1 · Forward</button>
+            <button class="btn sm" id="bpBwd" disabled>2 · Backward</button>
+            <button class="btn sm" id="bpUpd" disabled>3 · Update (η = 0.05)</button>
+            <button class="btn sm ghost" id="bpReset">Reset</button>
+            <span class="bp-iter">round <b id="bpRound">1</b> · loss <b id="bpLoss">—</b></span>
+          </div>
+          <p class="demo-note" id="bpNote">Example: input <b>x = 2</b>, correct answer <b>y = 5</b>. The model starts with w = 0.5, b = 0, so it predicts 1. Press <b>Forward</b>.</p>
+        </div>
+      </div>
+
+      <h4 class="sub">The training loop: epochs and mini-batches</h4>
+      <div class="twocol">
+        <div>
+          <p>Real training repeats the loop thousands to millions of times. Instead of using all the data in each step, we use a small random <b>mini-batch</b> (say 32 examples). This is faster and the randomness helps. One full pass through the training data is an <b>epoch</b>. Modern optimisers such as <b>Adam</b> <a class="cite" href="#ref-7">[7]</a> adapt the step size for every weight automatically.</p>
+          <p>This is what training looks like in PyTorch. Every line maps to a beat of the loop above:</p>
+        </div>
+        <pre class="code mini"><code><span class="c"># one epoch = one pass over the data</span>
+<b>for</b> epoch <b>in</b> range(<i>100</i>):
+  <b>for</b> X, y <b>in</b> batches(train_data, size=<i>32</i>):
+    pred = model(X)          <span class="c"># 1 predict</span>
+    loss = loss_fn(pred, y)  <span class="c"># 2 measure</span>
+    optimizer.zero_grad()
+    loss.backward()          <span class="c"># 3 gradient (backprop)</span>
+    optimizer.step()         <span class="c"># 4 update weights</span></code></pre>
+      </div>
+
+      <h4 class="sub" id="nn-lab">The neural-network lab</h4>
+      <p>Now everything together. This is a real neural network with layers of neurons, trained by backpropagation and Adam, entirely in your browser. A single neuron can only draw a straight line (Demo 4). Watch what a few layers can do.</p>
+      <ul class="types">
+        <li><b>Spiral, 1 hidden layer:</b> stuck near 50%. The model is too simple, so it underfits.</li>
+        <li><b>Spiral, 2 layers × 6:</b> after a few hundred epochs it climbs to about 95%.</li>
+        <li><b>Spiral, 3 layers × 8:</b> the train loss drops to almost 0 while the test loss stays high. This is overfitting, previewing Step 6.</li>
+        <li><b>Learning rate 0.1+:</b> the loss curve becomes jumpy, the same effect you saw in Demo 6.</li>
+      </ul>
+
+      <div class="demo wide">
+        <div class="demo-head"><span class="demo-tag">Demo 8</span><h4>Train a neural network</h4><span class="demo-hint">Background colour = what the network predicts for that spot</span></div>
+        <div class="nn">
+          <div class="nn-left">
+            <canvas id="nnCanvas" class="sq"></canvas>
+            <div class="readout"><span>epoch <b id="nnEpoch">0</b></span><span>train loss <b id="nnTrain">—</b></span><span>test loss <b id="nnTest">—</b></span><span>test accuracy <b id="nnAcc">—</b></span></div>
+          </div>
+          <div class="nn-right">
+            <div class="ctl-group">
+              <p class="ctl-label">Dataset</p>
+              <div class="seg small" id="nnData">
+                <button class="on" data-d="circle">Circle</button>
+                <button data-d="xor">XOR</button>
+                <button data-d="moons">Moons</button>
+                <button data-d="spiral">Spiral</button>
+              </div>
+            </div>
+            <div class="ctl-row">
+              <label>hidden layers <output id="nnLo">2</output><input type="range" id="nnLayers" min="1" max="4" value="2"></label>
+              <label>neurons per layer <output id="nnNo">6</output><input type="range" id="nnNeurons" min="1" max="10" value="6"></label>
+            </div>
+            <div class="ctl-row">
+              <label>learning rate <output id="nnLro">0.01</output><input type="range" id="nnLr" min="0" max="5" value="2"></label>
+              <label>noise <output id="nnNz">10%</output><input type="range" id="nnNoise" min="0" max="50" value="10"></label>
+            </div>
+            <div class="ctl-group">
+              <p class="ctl-label">Activation (the “squash”)</p>
+              <div class="seg small" id="nnAct"><button class="on" data-a="tanh">tanh</button><button data-a="relu">ReLU</button><button data-a="sigmoid">sigmoid</button></div>
+            </div>
+            <div class="controls">
+              <button class="btn sm primary" id="nnPlay">▶ Train</button>
+              <button class="btn sm" id="nnStep">+1 epoch</button>
+              <button class="btn sm" id="nnReset">New random weights</button>
+            </div>
+            <p class="pane-cap">Network · line thickness = weight size · <span class="pos">blue +</span> / <span class="neg">orange −</span></p>
+            <svg id="nnNet" viewBox="0 0 420 170" aria-hidden="true"></svg>
+            <p class="pane-cap">Loss curve <span class="key-train">train</span> <span class="key-test">test</span></p>
+            <canvas id="nnCurve" class="short"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 6 -->
+  <article class="step" id="s6">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <h3>Evaluate: did it learn, or just memorise?</h3>
+      <p>A model that is perfect on its training data might simply have <b>memorised</b> it. The real question is how it does on data it has <b>never seen</b>. Two failure modes:</p>
+      <ul class="types">
+        <li><b>Underfitting</b>: the model is too simple to capture the pattern. It is bad on training <em>and</em> test data.</li>
+        <li><b>Overfitting</b>: the model is so flexible that it learns the noise. It is great on training data and bad on test data.</li>
+      </ul>
+      <div class="demo wide">
+        <div class="demo-head"><span class="demo-tag">Demo 9</span><h4>Overfitting, visualised</h4><span class="demo-hint">Increase the model’s flexibility (polynomial degree)</span></div>
+        <div class="of">
+          <div class="gd-pane"><p class="pane-cap">Fit to <b>12 training points</b> (●) · hidden test points (○)</p><canvas id="ofFit"></canvas></div>
+          <div class="gd-pane"><p class="pane-cap">Error vs. model complexity <span class="key-train">train</span> <span class="key-test">test</span></p><canvas id="ofErr"></canvas></div>
+        </div>
+        <div class="controls">
+          <label class="inline wide">model complexity (degree) <output id="ofDegO">3</output><input type="range" id="ofDeg" min="0" max="11" value="3"></label>
+          <label class="check"><input type="checkbox" id="ofShowTest"> show test points</label>
+          <button class="btn sm" id="ofNew">New data sample</button>
+          <span class="verdict" id="ofVerdict"></span>
+        </div>
+      </div>
+      <p>Fixes for overfitting include <b>more data</b>, <b>simpler models</b>, <b>regularisation</b> (penalising large weights), <b>dropout</b> <a class="cite" href="#ref-12">[12]</a>, and <b>early stopping</b> (stop training when validation loss starts to rise. Watch the test curve in Demo 8).</p>
+
+      <h4 class="sub">Accuracy is not the only score</h4>
+      <p>Suppose a spam filter gives every email a “spam score” from 0 to 1. Where you set the cut-off changes the kind of mistakes it makes. <b>Precision</b> asks: of the emails flagged as spam, how many really were? <b>Recall</b> asks: of all the real spam, how much did we catch?</p>
+      <div class="demo">
+        <div class="demo-head"><span class="demo-tag">Demo 10</span><h4>Confusion matrix &amp; threshold</h4><span class="demo-hint">Drag the threshold</span></div>
+        <div class="cm">
+          <div>
+            <canvas id="cmStrip" class="short"></canvas>
+            <label class="inline wide">threshold <output id="cmTo">0.50</output><input type="range" id="cmT" min="0" max="100" value="50"></label>
+          </div>
+          <div class="cm-right">
+            <table class="cmtable" id="cmTable"></table>
+            <div class="metrics" id="cmMetrics"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 7 -->
+  <article class="step" id="s7">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <h3>Deploy &amp; monitor</h3>
+      <p>After training, the model is just a file of numbers, for example <code>model.pt</code> or <code>model.safetensors</code>. To make it useful you wrap it in an app or an <b>API</b>, which is like publishing your website on GitHub Pages. Then you keep watching it, because the world changes and a model trained on last year’s data slowly goes stale. This is called <b>data drift</b>.</p>
+      <div class="deploy" id="deployFlow">
+        <div class="dnode"><b>Saved model</b><span>weights file</span></div>
+        <div class="darrow">→</div>
+        <div class="dnode"><b>Serve it</b><span>API with FastAPI, or a demo with Gradio / Hugging Face Spaces <a class="cite" href="#ref-20">[20]</a></span></div>
+        <div class="darrow">→</div>
+        <div class="dnode"><b>Users</b><span>app, website, chatbot</span></div>
+        <div class="darrow">→</div>
+        <div class="dnode"><b>Monitor</b><span>accuracy, drift, feedback</span></div>
+        <div class="dloop">↺ new data → retrain (back to step 2)</div>
+      </div>
+      <p>Running a trained model to get answers is called <b>inference</b>. Inference is cheap compared with training: training a large language model can take thousands of GPUs for weeks, while answering one question takes a fraction of a second.</p>
+    </div>
+  </article>
+</section>
+
+<!-- ============ LLM ============ -->
+<section class="section" id="llm">
+  <div class="sec-head">
+    <p class="eyebrow">03 — Scaling up</p>
+    <h2>So how do ChatGPT and Claude learn?</h2>
+    <p class="sec-lede">The same 7 steps and the same loop, at an enormous scale. A large language model (LLM) is trained in stages.</p>
+  </div>
+
+  <div class="stages">
+    <div class="stage">
+      <span class="stage-n">Stage 1</span>
+      <h4>Pre-training</h4>
+      <p><b>Task:</b> predict the next word (more precisely, the next <em>token</em>) across a huge amount of text. Meta’s Llama 3 was trained on about <b>15 trillion tokens</b> <a class="cite" href="#ref-16">[16]</a>.</p>
+      <p><b>Model:</b> a <em>Transformer</em> <a class="cite" href="#ref-8">[8]</a>, a neural network that uses “attention” to decide which earlier words matter for the next one.</p>
+      <p><b>Loss:</b> cross-entropy on the correct next token. <b>Training:</b> gradient descent and backprop, exactly as in Step 5.</p>
+      <p class="stage-out">Result: a model that knows a lot about language and the world, but just continues text.</p>
+    </div>
+    <div class="stage">
+      <span class="stage-n">Stage 2</span>
+      <h4>Supervised fine-tuning</h4>
+      <p>Continue training on many curated examples of <b>(instruction → good answer)</b>, written or checked by people. Same loss and same loop, but on much smaller, higher-quality data.</p>
+      <p class="stage-out">Result: a model that follows instructions and answers like an assistant.</p>
+    </div>
+    <div class="stage">
+      <span class="stage-n">Stage 3</span>
+      <h4>Learning from feedback</h4>
+      <p>People (or a written set of principles) compare answers and rank which is better. A <b>reward model</b> learns these preferences, and reinforcement learning pushes the LLM towards preferred answers. This is <b>RLHF</b> <a class="cite" href="#ref-10">[10]</a>. Anthropic’s <b>Constitutional AI</b> uses AI feedback guided by written principles <a class="cite" href="#ref-11">[11]</a>.</p>
+      <p class="stage-out">Result: a more helpful, honest and harmless assistant.</p>
+    </div>
+  </div>
+
+  <div class="demo wide">
+    <div class="demo-head"><span class="demo-tag">Demo 11</span><h4>A tiny language model, trained on your text</h4><span class="demo-hint">Type a word · click a bar to see its loss · or retrain on your own text</span></div>
+    <div class="lm">
+      <div class="lm-left">
+        <label class="ctl-label" for="lmInput">Your prompt (the model looks at the last word)</label>
+        <input id="lmInput" class="textin" value="the model" autocomplete="off" spellcheck="false">
+        <p class="pane-cap">Predicted next word, as probabilities</p>
+        <div class="bars" id="lmBars"></div>
+        <p class="demo-note" id="lmLossNote">Click a bar: if that word were the true next word, the training loss would be −log(p).</p>
+        <div class="controls">
+          <button class="btn sm primary" id="lmGen">Generate 20 words</button>
+          <label class="inline">temperature <output id="lmTo">1.0</output><input type="range" id="lmTemp" min="1" max="20" value="10"></label>
+        </div>
+        <p class="gen" id="lmOut"></p>
+      </div>
+      <div class="lm-right">
+        <label class="ctl-label" for="lmCorpus">Training text (edit it, then retrain)</label>
+        <textarea id="lmCorpus" spellcheck="false"></textarea>
+        <div class="controls"><button class="btn sm" id="lmTrain">Retrain on this text</button><span class="muted small" id="lmStats"></span></div>
+        <p class="demo-note">This is a <b>bigram</b> model. It only counts which word follows which, so it is millions of times simpler than a real LLM. A real LLM looks at thousands of previous tokens, not just one. It also <em>learns</em> its probabilities with billions of weights through gradient descent instead of counting. The training goal is the same: make the true next word more probable.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p class="callout-label">Scale is a big part of the story</p>
+    <p>Researchers found that loss falls smoothly and predictably as you increase model size, data and compute (“scaling laws” <a class="cite" href="#ref-13">[13]</a>). DeepMind’s Chinchilla study showed that data must grow along with model size. Their 70-billion-parameter model trained on 1.4 trillion tokens outperformed much larger models <a class="cite" href="#ref-14">[14]</a>.</p>
+  </div>
+</section>
+
+<!-- ============ DIY ============ -->
+<section class="section" id="diy">
+  <div class="sec-head">
+    <p class="eyebrow">04 — Your turn</p>
+    <h2>How can someone actually do it? Three routes</h2>
+    <p class="sec-lede">Like websites, there is a no-code route, a hand-coded route, and the “vibe coding” route where an AI writes the code for you. All three follow the same 7 steps.</p>
+  </div>
+
+  <div class="seg big" id="routeTabs" role="tablist">
+    <button class="on" data-r="nocode"><b>A</b> No-code · 10 min</button>
+    <button data-r="code"><b>B</b> Write the code · 1 hour</button>
+    <button data-r="vibe"><b>C</b> Vibe-code with Claude</button>
+  </div>
+
+  <div class="route on" id="route-nocode">
+    <div class="twocol">
+      <div>
+        <h3>Google Teachable Machine</h3>
+        <p>Train an image, sound or pose classifier in your browser with no code <a class="cite" href="#ref-17">[17]</a>. It is the “website builder” of ML, and a great way to <em>feel</em> the 7 steps.</p>
+        <ol class="checklist">
+          <li><b>Frame:</b> open <a href="https://teachablemachine.withgoogle.com/" target="_blank" rel="noopener">teachablemachine.withgoogle.com</a> → <i>Image Project</i> → <i>Standard</i>. Pick 2–3 classes, e.g. 👍 / 👎 / ✋.</li>
+          <li><b>Data:</b> record 100+ webcam images per class. Vary lighting, angle and background, otherwise the model learns the background instead of your hand.</li>
+          <li><b>Model:</b> already chosen for you (a pretrained image network that gets fine-tuned. This is called <em>transfer learning</em>).</li>
+          <li><b>Train:</b> click <i>Train Model</i>. Open <i>Advanced</i> to see <b>epochs</b>, <b>batch size</b> and <b>learning rate</b>, the same knobs as this guide.</li>
+          <li><b>Evaluate:</b> use <i>Preview</i> with new poses, a friend’s hand, or a different room. Where does it fail?</li>
+          <li><b>Deploy:</b> <i>Export Model</i> to get a shareable link or TensorFlow.js code for a website.</li>
+        </ol>
+      </div>
+      <div class="side-card">
+        <p class="ctl-label">Why it works with so little data</p>
+        <p>The model started out already trained on millions of photos. You only fine-tune its last layer to your classes. This is the same idea as Stage 2 of an LLM: start from a pretrained model and adapt it.</p>
+        <p class="ctl-label">Other no-code / low-code tools</p>
+        <p>Hugging Face AutoTrain <a class="cite" href="#ref-21">[21]</a> (upload a CSV or images and it trains and compares models), and fine-tuning interfaces from cloud providers.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="route" id="route-code">
+    <h3>Python in Google Colab: the professional way</h3>
+    <p><a href="https://colab.research.google.com/" target="_blank" rel="noopener">Google Colab</a> gives you free Python in the browser, with GPUs available, so there is nothing to install. Paste the code below into a cell and run it. It trains a neural network to read <b>handwritten digits</b> (1,797 small 8×8 images <a class="cite" href="#ref-19">[19]</a>). <b>Hover over any line</b> to see which step it is.</p>
+    <div class="seg small" id="codeTabs"><button class="on" data-c="sk">scikit-learn (beginner)</button><button data-c="pt">PyTorch (what researchers use)</button></div>
+    <div class="annot">
+      <pre class="code" id="codeBox"></pre>
+      <aside class="annot-note" id="codeNote"><p class="ctl-label">Hover a line</p><p>Each line is tagged with the step of the 7-step process it belongs to.</p></aside>
+    </div>
+    <p class="demo-note" id="codeResult"></p>
+    <p>Learning path after this: Kaggle’s <i>Intro to Machine Learning</i> <a class="cite" href="#ref-18">[18]</a>, then Google’s <i>Machine Learning Crash Course</i> <a class="cite" href="#ref-2">[2]</a>, then fast.ai’s <i>Practical Deep Learning</i> <a class="cite" href="#ref-22">[22]</a> or the official PyTorch tutorials <a class="cite" href="#ref-15">[15]</a>.</p>
+  </div>
+
+  <div class="route" id="route-vibe">
+    <div class="twocol">
+      <div>
+        <h3>Let Claude write the steps, while you stay the pilot</h3>
+        <p>Just as you can vibe-code a website, you can ask an AI assistant to write the training code, explain it, and fix errors. The workflow:</p>
+        <ol class="checklist">
+          <li>Describe the goal and the data in plain English (step 1).</li>
+          <li>Ask for code that runs in Colab, with comments on every line.</li>
+          <li>Run it, paste any error back, and iterate.</li>
+          <li>Ask it to plot the loss curve and report the <b>test</b> score.</li>
+          <li><b>Check the results yourself</b> with the list on the right. The AI can write code that runs and is still wrong.</li>
+        </ol>
+        <p class="ctl-label">A good starter prompt</p>
+        <div class="prompt">
+          <p id="vibePrompt">I'm a beginner learning machine learning. Write Python for Google Colab that trains a small neural network on scikit-learn's handwritten digits dataset. Follow these steps and label each one in comments: (1) load and inspect the data, (2) split it 80/20 into train and test sets without leakage, (3) define the model, (4) choose the loss, (5) train it and plot the training loss per epoch, (6) report test accuracy and a confusion matrix. Explain every line simply, then tell me how I would know if the model is overfitting.</p>
+          <button class="btn sm" id="copyPrompt">Copy prompt</button>
+        </div>
+      </div>
+      <div class="side-card">
+        <p class="ctl-label">What you still have to check</p>
+        <ul class="ticks">
+          <li>Is the test set really kept separate? Is there no leakage?</li>
+          <li>Does the model beat a dumb baseline?</li>
+          <li>Train vs. validation loss: is it overfitting?</li>
+          <li>Does the score make sense, or is it suspiciously perfect?</li>
+          <li>Is the data fair and representative of real use?</li>
+        </ul>
+        <p class="muted small">Vibe coding speeds up <em>writing</em> the code. Understanding the 7 steps is what lets you tell whether the result can be trusted, and that is why this guide exists.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VIDEOS ============ -->
+<section class="section" id="videos">
+  <div class="sec-head">
+    <p class="eyebrow">05 — Watch</p>
+    <h2>The best videos on how AI learns</h2>
+    <p class="sec-lede">If you watch only one, watch <b>3Blue1Brown: “Gradient descent, how neural networks learn”</b>. It is the visual version of Step 5. Videos load only when you press play.</p>
+  </div>
+  <div class="videos" id="videoGrid"></div>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section class="section" id="quiz">
+  <div class="sec-head">
+    <p class="eyebrow">06 — Check yourself</p>
+    <h2>Six-question quiz</h2>
+    <p class="sec-lede">If you can answer these, you understand how the AI learns better than most people.</p>
+  </div>
+  <div class="quiz" id="quizBox"></div>
+  <div class="quiz-score" id="quizScore"></div>
+</section>
+
+<!-- ============ GLOSSARY ============ -->
+<section class="section" id="glossary">
+  <div class="sec-head">
+    <p class="eyebrow">07 — Cheat sheet</p>
+    <h2>Glossary</h2>
+  </div>
+  <input class="textin search" id="glossSearch" placeholder="Search terms… e.g. epoch" aria-label="Search glossary">
+  <dl class="gloss" id="glossList"></dl>
+</section>
+
+<!-- ============ REFS ============ -->
+<section class="section" id="refs">
+  <div class="sec-head">
+    <p class="eyebrow">08 — Sources</p>
+    <h2>References &amp; further reading</h2>
+    <p class="sec-lede">Numbers in square brackets in the text link here.</p>
+  </div>
+  <ol class="refs" id="refList"></ol>
+</section>
+
+</main>
+
+<footer class="foot">
+  <p><b>How the AI Learns</b> · Week 1 extra report · An interactive technical guide to machine learning.</p>
+  <p class="muted">All demos run locally in your browser with plain JavaScript. No data leaves your device. Videos are embedded from YouTube only when you press play.</p>
+</footer>
+
+<script src="js/core.js"></script>
+<script src="js/content.js"></script>
+<script src="js/demos-basic.js"></script>
+<script src="js/demos-train.js"></script>
+<script src="js/demos-eval.js"></script>
+<script src="js/demos-llm.js"></script>
+</body>
+</html>
