@@ -117,7 +117,7 @@
     navLinks.forEach((a) => a.addEventListener("click", () => { nav.classList.remove("open"); tog.setAttribute("aria-expanded", "false"); }));
 
     // reveal on scroll
-    const rv = $$(".sec-head, .demo, .step-body > p, .callout, .stage, .video, .qcard, .ladder, .deploy, .analogy, .loop");
+    const rv = $$(".sec-head, .demo, .step-body > p, .callout, .stage, .video, .ladder, .deploy, .analogy, .loop");
     if ("IntersectionObserver" in window && !window.AI.reduced) {
       const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
       rv.forEach((el) => {

@@ -12,7 +12,7 @@ An interactive, single-page guide to **how machine learning is actually carried 
 - **11 live demos that really compute in the browser:** problem types, features and labels, train/val/test split, a hand-tuned neuron, “you are the optimiser”, live gradient descent on a loss landscape, a step-by-step backpropagation graph, a neural-network lab (backprop and Adam from scratch), overfitting, a confusion matrix, and a tiny bigram language model.
 - **How LLMs like ChatGPT and Claude learn:** pre-training, fine-tuning, RLHF and Constitutional AI.
 - **Three do-it-yourself routes:** no-code (Teachable Machine), Python in Colab (scikit-learn / PyTorch, with line-by-line annotations; both scripts were run and their real outputs are shown), and vibe coding with Claude.
-- **9 curated videos** (3Blue1Brown, Andrej Karpathy), a quiz, a glossary and **28 references**.
+- **9 curated videos** (3Blue1Brown, Andrej Karpathy), a glossary and **28 references**.
 
 ## Tech
 
@@ -22,7 +22,7 @@ Plain HTML, CSS and JavaScript with no build step and no dependencies (except Go
 index.html        page structure and text
 styles.css        design
 js/core.js        helpers, navigation, scroll progress
-js/content.js     analogy, cards, code walkthrough, videos, quiz, glossary, references
+js/content.js     analogy, cards, code walkthrough, videos, glossary, references
 js/demos-*.js     the interactive demos
 ```
 

@@ -1,4 +1,4 @@
-/* content.js: analogy, loop, cards, ladder, DIY code, videos, quiz, glossary, references */
+/* content.js: analogy, loop, cards, ladder, DIY code, videos, glossary, references */
 (function () {
   "use strict";
   const { $, $$, seg } = window.AI;
@@ -288,48 +288,6 @@
     div.appendChild(f);
     b.replaceWith(div);
   }));
-
-  // ---------------- Quiz ----------------
-  const QUIZ = [
-    ["In machine learning, where do the rules the model uses come from?",
-      ["A programmer writes them line by line", "They are learned from data and stored as numbers (weights)", "They are downloaded from the internet"], 1,
-      "The programmer writes the <em>learning procedure</em>. The rules themselves are learned weights. That is the key difference from building a website."],
-    ["What does the loss measure?",
-      ["How fast the model runs", "How many parameters the model has", "How wrong the model’s predictions are, as a single number"], 2,
-      "Training is the search for weights that make this number as small as possible."],
-    ["You set the learning rate far too high. What typically happens?",
-      ["Training is very slow but steady", "The loss bounces around or explodes instead of falling", "The model becomes more accurate"], 1,
-      "Each step overshoots the valley. Try the “too big” preset in Demo 6."],
-    ["Training accuracy is 99% but test accuracy is 61%. What is the most likely problem?",
-      ["Overfitting: it memorised the training data", "Underfitting: the model is too simple", "The test set is too large"], 0,
-      "A big gap between training and test performance is the signature of overfitting (Demo 9)."],
-    ["What does backpropagation compute?",
-      ["The prediction for a new input", "The gradient: how much each weight contributed to the error", "The best architecture for the problem"], 1,
-      "It applies the chain rule backwards from the loss to every weight (Demo 7). The optimiser then uses these gradients."],
-    ["During pre-training, what task does a large language model learn?",
-      ["Predicting the next token in text", "Answering exam questions written by experts", "Copying web pages word for word into memory"], 0,
-      "Next-token prediction with cross-entropy loss. Instruction-following and helpfulness come later, from fine-tuning and feedback."],
-  ];
-  const qb = $("#quizBox"), qs = $("#quizScore");
-  let answered = 0, correct = 0;
-  qb.innerHTML = QUIZ.map(([q, opts], i) => `
-    <div class="qcard" data-i="${i}"><span class="qn">Question ${i + 1} of ${QUIZ.length}</span><h4>${q}</h4>
-    ${opts.map((o, j) => `<button class="qopt" data-j="${j}">${o}</button>`).join("")}
-    <p class="qexp"></p></div>`).join("");
-  $$(".qcard", qb).forEach((card) => {
-    const i = +card.dataset.i, [, , ans, exp] = QUIZ[i];
-    $$(".qopt", card).forEach((b) => b.addEventListener("click", () => {
-      const j = +b.dataset.j, ok = j === ans;
-      $$(".qopt", card).forEach((x, k) => { x.disabled = true; if (k === ans) x.classList.add("right"); });
-      if (!ok) b.classList.add("wrong");
-      card.classList.add("done");
-      $(".qexp", card).innerHTML = (ok ? "<b>Correct.</b> " : "<b>Not quite.</b> ") + exp;
-      answered++; if (ok) correct++;
-      qs.textContent = answered === QUIZ.length
-        ? `You scored ${correct} / ${QUIZ.length}. ${correct === QUIZ.length ? "Perfect. You know how the AI learns." : correct >= 4 ? "Great work." : "Scroll back to the demos and try again."}`
-        : `${correct} / ${answered} correct so far…`;
-    }));
-  });
 
   // ---------------- Glossary ----------------
   const GLOSS = [
